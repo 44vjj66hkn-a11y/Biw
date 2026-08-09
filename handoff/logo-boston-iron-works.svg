@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 118" width="340" height="118" role="img" aria-label="Boston Iron Works">
+  <title>Boston Iron Works</title>
+  <!-- Verde da marca. Trocar fill por #C9A227 para a versão da Gestão. -->
+  <g fill="#22B268">
+    <text x="170" y="46" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="46" font-weight="700" letter-spacing="1.5">BOSTON</text>
+    <!-- mesa superior da viga I -->
+    <path d="M14 55 L336 60 L336 66 L14 68 Z"/>
+    <!-- alma da viga, que faz o "I" de IRON -->
+    <path d="M32 55 L52 55 L52 104 L32 108 Z"/>
+    <!-- mesa inferior -->
+    <path d="M14 100 L336 92 L336 100 L14 112 Z"/>
+    <text x="58" y="96" font-family="Georgia, 'Times New Roman', serif" font-size="40" font-weight="700" letter-spacing="0.5">RON WORKS</text>
+  </g>
+</svg>
