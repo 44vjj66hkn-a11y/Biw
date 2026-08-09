@@ -23,7 +23,12 @@ a base de uma vez sai melhor do que ir montando aos pedaços.
 **3. Confira o resultado** com a lista do `INVARIANTES.md`, entrando por
 um usuário de teste com acesso de Produção.
 
-**4. A cada mudança grande**, cole junto o bloco de invariantes.
+**4. Com a base de pé**, vá colando as imagens de `telas/`, uma por vez.
+Cada uma tem, no `telas/LEIA-ME.md`, a frase a colar junto — imagem
+sozinha o construtor copia como decoração, imagem com a intenção
+explicada ele constrói certo.
+
+**5. A cada mudança grande**, cole junto o bloco de invariantes.
 
 ## O que tem aqui
 
@@ -33,6 +38,7 @@ um usuário de teste com acesso de Produção.
 | `INVARIANTES.md` | As regras que não podem quebrar + conferência |
 | `logo-boston-iron-works.svg` | A marca em vetor, verde. Troque o `fill` para `#C9A227` na versão da Gestão |
 | `traducoes.csv` | 117 textos em português, inglês e espanhol |
+| `telas/` | Capturas das telas funcionando, com o texto para colar junto de cada uma |
 
 ## Fora desta pasta
 
