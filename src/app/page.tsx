@@ -1,68 +1,226 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Logo } from "@/components/Logo";
+import { LangSwitcher } from "@/components/ui";
+import { DEMO_TENANTS } from "@/lib/demo-data";
+import { IS_DEMO, useApp } from "@/lib/store";
+import type { UserRole } from "@/lib/types";
+
+export default function LoginPage() {
+  const { t, signIn } = useApp();
+  const router = useRouter();
+
+  const [tenantId, setTenantId] = useState(DEMO_TENANTS[0].id);
+  const [email, setEmail] = useState("marcos@bostonironworks.com");
+  const [password, setPassword] = useState("demo1234");
+  const [role, setRole] = useState<UserRole>("producao");
+  const [busy, setBusy] = useState(false);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    signIn(tenantId, role);
+    router.push(role === "producao" ? "/trabalhos" : "/gestao");
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="login">
+      <aside className="login-brand">
+        <div className="logo-box">
+          <Logo />
+        </div>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 440 }}>
+          <h2
+            style={{
+              fontSize: 30,
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              margin: "0 0 12px",
+              lineHeight: 1.2,
+            }}
+          >
+            {t("Gestão de Produção")}
+          </h2>
+          <p
+            style={{
+              fontSize: 17,
+              color: "var(--muted)",
+              lineHeight: 1.65,
+              margin: 0,
+            }}
+          >
+            {t(
+              "Guarda-corpos e esquadrias. Cada unidade da franquia entra com o próprio acesso e enxerga apenas os seus trabalhos, sua equipe e seus números. Nenhuma unidade vê os dados de outra.",
+            )}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </aside>
+
+      <main className="login-form-side">
+        <div className="login-lang">
+          <LangSwitcher />
         </div>
+
+        <form className="login-card" onSubmit={submit}>
+          <h1
+            style={{
+              fontSize: 29,
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              margin: "0 0 7px",
+            }}
+          >
+            {t("Entrar")}
+          </h1>
+          <p style={{ fontSize: 16, color: "var(--muted)", margin: "0 0 26px" }}>
+            {t("Selecione sua unidade e informe seus dados.")}
+          </p>
+
+          <div style={{ marginBottom: 16 }}>
+            <label className="field-label" htmlFor="unit">
+              {t("Unidade da franquia")}
+            </label>
+            <select
+              id="unit"
+              className="input"
+              value={tenantId}
+              onChange={(e) => setTenantId(e.target.value)}
+              style={{
+                borderColor: "var(--brand-line)",
+                background: "var(--brand-dim)",
+              }}
+            >
+              {DEMO_TENANTS.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label className="field-label" htmlFor="email">
+              {t("E-mail")}
+            </label>
+            <input
+              id="email"
+              type="email"
+              className="input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label className="field-label" htmlFor="pass">
+              {t("Senha")}
+            </label>
+            <input
+              id="pass"
+              type="password"
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          {IS_DEMO && (
+            <div style={{ marginBottom: 18 }}>
+              <span className="field-label">Demonstração — qual app abrir</span>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 9,
+                }}
+              >
+                {(
+                  [
+                    ["producao", "Produção", "Fabricante e instalador. Sem acesso a valores."],
+                    ["gestao", "Gestão", "Dono da unidade. Custos, lucro e margem."],
+                  ] as const
+                ).map(([value, title, desc]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRole(value)}
+                    aria-pressed={role === value}
+                    style={{
+                      background:
+                        role === value ? "var(--brand-dim)" : "var(--card)",
+                      border: `1px solid ${role === value ? "var(--brand)" : "var(--border)"}`,
+                      borderRadius: "var(--r-sm)",
+                      padding: 13,
+                      textAlign: "left",
+                      cursor: "pointer",
+                      color: "var(--muted)",
+                      font: "inherit",
+                    }}
+                  >
+                    <b
+                      style={{
+                        display: "block",
+                        fontSize: 16,
+                        marginBottom: 4,
+                        color: "var(--text)",
+                      }}
+                    >
+                      {t(title)}
+                    </b>
+                    <span style={{ fontSize: 13, lineHeight: 1.45 }}>
+                      {desc}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--faint)",
+                  margin: "8px 0 0",
+                  lineHeight: 1.5,
+                }}
+              >
+                No app real isso vem do cadastro do usuário — ninguém escolhe o
+                próprio nível de acesso.
+              </p>
+            </div>
+          )}
+
+          <button
+            className="btn"
+            style={{ width: "100%", padding: 15, marginTop: 6 }}
+            disabled={busy}
+          >
+            {busy ? t("Entrando…") : t("Entrar na unidade")}
+          </button>
+
+          <p
+            style={{
+              textAlign: "center",
+              marginTop: 18,
+              fontSize: 15,
+              color: "var(--faint)",
+            }}
+          >
+            {t("Esqueceu a senha?")}{" "}
+            <a
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              style={{
+                color: "var(--brand)",
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              {t("Recuperar acesso")}
+            </a>
+          </p>
+        </form>
       </main>
     </div>
   );

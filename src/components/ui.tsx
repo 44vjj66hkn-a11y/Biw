@@ -52,6 +52,46 @@ export function Photo({
   );
 }
 
+/**
+ * Miniatura da foto de referência nas listagens. Sem foto, mostra um
+ * alvo de toque para enviar — em vez de um desenho que passaria a
+ * impressão falsa de que já existe imagem.
+ */
+export function ReferenceThumb({
+  photo,
+  width = 46,
+  height = 36,
+}: {
+  photo?: JobPhoto | null;
+  width?: number;
+  height?: number;
+}) {
+  const { t } = useApp();
+  if (photo) {
+    return (
+      <Photo photo={photo} style={{ width, height, borderRadius: 7 }} />
+    );
+  }
+  return (
+    <span
+      title={t("Sem foto de referência")}
+      style={{
+        display: "grid",
+        placeItems: "center",
+        width,
+        height,
+        borderRadius: 7,
+        border: "1.5px dashed var(--border)",
+        background: "var(--card-3)",
+        color: "var(--faint)",
+        fontWeight: 800,
+      }}
+    >
+      +
+    </span>
+  );
+}
+
 /* ---------------- idioma ---------------- */
 
 export function LangSwitcher() {
