@@ -11,10 +11,10 @@ import {
 } from "@/components/ui";
 import { formatDayMonth } from "@/lib/i18n";
 import { useApp } from "@/lib/store";
-import type { Job } from "@/lib/types";
+import { shortName, TRADE_LABEL, type Job } from "@/lib/types";
 
 export default function TrabalhosPage() {
-  const { jobs, lang, t, team } = useApp();
+  const { jobs, lang, t, team, memberById } = useApp();
   const router = useRouter();
 
   const emProducao = jobs.filter((j) => j.status === "em_producao");
@@ -97,14 +97,11 @@ export default function TrabalhosPage() {
           <span className="panel-title">{t("Equipe do mês")}</span>
         </div>
         <div className="list">
-          {team.map((p) => {
-            // os nomes vêm abreviados nos trabalhos ("Marcos A."),
-            // então casa pelo primeiro nome
-            const first = p.full_name.split(" ")[0];
+          {team
+            .filter((p) => p.active)
+            .map((p) => {
             const feitos = jobs.filter(
-              (j) =>
-                j.fabricator_name?.startsWith(first) ||
-                j.installer_name?.startsWith(first),
+              (j) => j.fabricator_id === p.id || j.installer_id === p.id,
             ).length;
             return (
               <div className="list-item" key={p.id}>
@@ -114,7 +111,8 @@ export default function TrabalhosPage() {
                     {p.full_name}
                   </div>
                   <div style={{ fontSize: 14, color: "var(--faint)" }}>
-                    {feitos} {t("Trabalhos").toLowerCase()}
+                    {t(TRADE_LABEL[p.trade])} · {feitos}{" "}
+                    {t("Trabalhos").toLowerCase()}
                   </div>
                 </div>
               </div>
@@ -170,8 +168,16 @@ export default function TrabalhosPage() {
                   <td className="num">
                     {job.quantity} {job.quantity_unit}
                   </td>
-                  <td>{job.fabricator_name ?? <Dash />}</td>
-                  <td>{job.installer_name ?? <Dash />}</td>
+                  <td>
+                    {memberById(job.fabricator_id)
+                      ? shortName(memberById(job.fabricator_id)!.full_name)
+                      : <Dash />}
+                  </td>
+                  <td>
+                    {memberById(job.installer_id)
+                      ? shortName(memberById(job.installer_id)!.full_name)
+                      : <Dash />}
+                  </td>
                   <td className="num">{job.photo_count}</td>
                   <td className="num">
                     {formatDayMonth(job.install_date, lang) ?? (
@@ -198,8 +204,9 @@ function Dash() {
 }
 
 function JobMini({ job }: { job: Job }) {
-  const { lang, t } = useApp();
+  const { lang, t, memberById } = useApp();
   const router = useRouter();
+  const fabricator = memberById(job.fabricator_id);
 
   return (
     <article
@@ -237,13 +244,10 @@ function JobMini({ job }: { job: Job }) {
           )}
         </div>
         <div className="mini-foot">
-          {job.fabricator_name && (
+          {fabricator && (
             <span className="who">
-              <Avatar
-                initials={job.fabricator_name.slice(0, 2).toUpperCase()}
-                size={20}
-              />
-              {job.fabricator_name}
+              <Avatar initials={fabricator.initials} size={20} />
+              {shortName(fabricator.full_name)}
             </span>
           )}
           <span className="who" style={{ color: "var(--faint)" }}>

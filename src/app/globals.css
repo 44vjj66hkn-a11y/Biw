@@ -1219,3 +1219,138 @@ textarea.input {
     min-width: 540px;
   }
 }
+
+/* ============================================================
+   Equipe e filtro de período
+   ============================================================ */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+}
+
+.member {
+  background: var(--card-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.member[data-inactive="true"] {
+  opacity: 0.62;
+}
+
+.member-phone {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.member-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 13px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.member-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.access-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.access-opt {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 13px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--muted);
+  font: inherit;
+}
+
+.access-opt[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.access-opt b {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.access-opt span {
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+/* seletor de período: semana / mês / total */
+.period {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.period button {
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.period button:hover {
+  color: var(--text);
+}
+
+.period button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* escalação direto no card do projeto */
+.assign-select {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  padding: 0;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.assign-select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (max-width: 760px) {
+  .access-pick {
+    grid-template-columns: 1fr;
+  }
+}

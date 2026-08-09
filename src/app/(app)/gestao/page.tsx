@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ChartLegend, CostProfitChart } from "@/components/CostProfitChart";
 import {
+  Avatar,
   Icon,
   LockBadge,
   Photo,
@@ -13,17 +14,31 @@ import {
 } from "@/components/ui";
 import { formatMoney, formatPercent } from "@/lib/i18n";
 import { useApp } from "@/lib/store";
-import type { MonthBucket } from "@/lib/types";
+import {
+  inPeriod,
+  PERIOD_LABEL,
+  PERIODS,
+  shortName,
+  type MonthBucket,
+  type Period,
+} from "@/lib/types";
 
 export default function GestaoPage() {
-  const { jobs, history, lang, t, createJob } = useApp();
+  const { jobs, history, lang, t, createJob, team } = useApp();
   const router = useRouter();
   const [novo, setNovo] = useState(false);
+  const [period, setPeriod] = useState<Period>("mes");
+
+  /** Trabalhos dentro do período escolhido (semana, mês ou tudo). */
+  const scoped = useMemo(
+    () => jobs.filter((j) => inPeriod(j, period)),
+    [jobs, period],
+  );
 
   const totals = useMemo(() => {
     let revenue = 0;
     let cost = 0;
-    for (const j of jobs) {
+    for (const j of scoped) {
       revenue += j.financials?.sale_price ?? 0;
       cost += j.financials?.total_cost ?? 0;
     }
@@ -33,6 +48,66 @@ export default function GestaoPage() {
       profit: revenue - cost,
       margin: revenue ? ((revenue - cost) / revenue) * 100 : null,
     };
+  }, [scoped]);
+
+  /** Faturamento e custo somados por fabricante, dentro do período. */
+  const porFabricante = useMemo(() => {
+    const rows = team
+      .filter((m) => m.trade !== "instalador")
+      .map((m) => {
+        let revenue = 0;
+        let cost = 0;
+        let count = 0;
+        for (const j of scoped) {
+          if (j.fabricator_id !== m.id) continue;
+          revenue += j.financials?.sale_price ?? 0;
+          cost += j.financials?.total_cost ?? 0;
+          count += 1;
+        }
+        return {
+          member: m,
+          count,
+          revenue,
+          cost,
+          profit: revenue - cost,
+          margin: revenue ? ((revenue - cost) / revenue) * 100 : null,
+        };
+      });
+
+    // trabalhos ainda sem fabricante escalado entram numa linha própria
+    let semRevenue = 0;
+    let semCost = 0;
+    let semCount = 0;
+    for (const j of scoped) {
+      if (j.fabricator_id) continue;
+      semRevenue += j.financials?.sale_price ?? 0;
+      semCost += j.financials?.total_cost ?? 0;
+      semCount += 1;
+    }
+
+    const all = rows.filter((r) => r.count > 0);
+    if (semCount > 0) {
+      all.push({
+        member: null as never,
+        count: semCount,
+        revenue: semRevenue,
+        cost: semCost,
+        profit: semRevenue - semCost,
+        margin: semRevenue ? ((semRevenue - semCost) / semRevenue) * 100 : null,
+      });
+    }
+    return all.sort((a, b) => b.revenue - a.revenue);
+  }, [scoped, team]);
+
+  /** O gráfico é sempre mensal — o filtro acima move os números do topo. */
+  const mesAtual = useMemo(() => {
+    let revenue = 0;
+    let cost = 0;
+    for (const j of jobs.filter((x) => inPeriod(x, "mes"))) {
+      revenue += j.financials?.sale_price ?? 0;
+      cost += j.financials?.total_cost ?? 0;
+    }
+    return { revenue, cost };
   }, [jobs]);
 
   const months: MonthBucket[] = useMemo(
@@ -45,17 +120,17 @@ export default function GestaoPage() {
       })),
       {
         key: "2026-08",
-        revenue: totals.revenue,
-        cost: totals.cost,
-        profit: totals.profit,
+        revenue: mesAtual.revenue,
+        cost: mesAtual.cost,
+        profit: mesAtual.revenue - mesAtual.cost,
       },
     ],
-    [history, totals],
+    [history, mesAtual],
   );
 
   const melhores = useMemo(
     () =>
-      jobs
+      scoped
         .filter((j) => (j.financials?.profit_percent ?? null) !== null)
         .sort(
           (a, b) =>
@@ -63,15 +138,29 @@ export default function GestaoPage() {
             (a.financials?.profit_percent ?? 0),
         )
         .slice(0, 5),
-    [jobs],
+    [scoped],
   );
 
   return (
     <div className="grid12">
       <section className="panel c12">
         <div className="panel-head">
-          <span className="panel-title">{t("Resultado do mês")}</span>
-          <LockBadge label={t("Somente Gestão")} />
+          <span className="panel-title">{t("Resultado")}</span>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <div className="period" role="group" aria-label={t("Período")}>
+              {PERIODS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  aria-pressed={period === p}
+                  onClick={() => setPeriod(p)}
+                >
+                  {t(PERIOD_LABEL[p])}
+                </button>
+              ))}
+            </div>
+            <LockBadge label={t("Somente Gestão")} />
+          </div>
         </div>
         <div className="kpis">
           <StatTile
@@ -121,7 +210,7 @@ export default function GestaoPage() {
 
       <section className="panel c4">
         <div className="panel-head">
-          <span className="panel-title">{t("Maiores margens do mês")}</span>
+          <span className="panel-title">{t("Maiores margens")}</span>
         </div>
         <div className="list">
           {melhores.map((j) => (
@@ -155,6 +244,74 @@ export default function GestaoPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="panel c12">
+        <div className="panel-head">
+          <span className="panel-title">{t("Por fabricante")}</span>
+          <span className="tool">{t(PERIOD_LABEL[period])}</span>
+        </div>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>{t("Fabricante")}</th>
+                <th className="r">{t("Trabalhos")}</th>
+                <th className="r">{t("Faturamento")}</th>
+                <th className="r">{t("Custos")}</th>
+                <th className="r">{t("Lucro")}</th>
+                <th className="r">{t("Margem")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {porFabricante.map((row, i) => (
+                <tr key={row.member?.id ?? `sem-${i}`} style={{ cursor: "default" }}>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                      {row.member ? (
+                        <>
+                          <Avatar initials={row.member.initials} size={32} />
+                          <span style={{ fontWeight: 800 }}>
+                            {shortName(row.member.full_name)}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Avatar initials="—" size={32} muted />
+                          <span style={{ color: "var(--faint)" }}>
+                            {t("Sem fabricante escalado")}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td className="r num">{row.count}</td>
+                  <td className="r num">{formatMoney(row.revenue)}</td>
+                  <td className="r num">{formatMoney(row.cost)}</td>
+                  <td className="r num">{formatMoney(row.profit)}</td>
+                  <td
+                    className="r num"
+                    style={{ color: "var(--good)", fontWeight: 800 }}
+                  >
+                    {formatPercent(row.margin, lang)}
+                  </td>
+                </tr>
+              ))}
+              {porFabricante.length === 0 && (
+                <tr style={{ cursor: "default" }}>
+                  <td colSpan={6} style={{ color: "var(--faint)" }}>
+                    {t("Nenhum trabalho neste período.")}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="hint" style={{ marginTop: 14 }}>
+          {t(
+            "Cada trabalho conta pela data de instalação; sem data marcada, conta pela abertura do projeto.",
+          )}
+        </p>
       </section>
 
       <section className="panel c12">
@@ -195,7 +352,7 @@ export default function GestaoPage() {
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job) => {
+              {scoped.map((job) => {
                 const f = job.financials;
                 const semValor = !f?.sale_price;
                 return (

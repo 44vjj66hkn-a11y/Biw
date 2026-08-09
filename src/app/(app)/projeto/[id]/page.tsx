@@ -13,10 +13,14 @@ import {
 import { formatDate, formatDayMonth, formatMoney, formatPercent } from "@/lib/i18n";
 import { useApp } from "@/lib/store";
 import {
+  canFabricate,
+  canInstall,
   JOB_STATUSES,
+  shortName,
   STATUS_LABEL,
   type DimensionKind,
   type JobPhoto,
+  type Profile,
 } from "@/lib/types";
 
 export default function ProjetoPage() {
@@ -34,6 +38,8 @@ export default function ProjetoPage() {
     addNote,
     addPhoto,
     setFinancials,
+    team,
+    assign,
   } = useApp();
 
   const job = jobById(id);
@@ -93,13 +99,17 @@ export default function ProjetoPage() {
               </p>
 
               <div className="hero-facts">
-                <Fact
+                <AssignFact
                   label={t("Fabricante")}
-                  value={job.fabricator_name ?? t("a definir")}
+                  selected={job.fabricator_id}
+                  options={team.filter((m) => m.active && canFabricate(m.trade))}
+                  onChange={(id) => assign(job.id, { fabricator_id: id })}
                 />
-                <Fact
+                <AssignFact
                   label={t("Instalador")}
-                  value={job.installer_name ?? t("a definir")}
+                  selected={job.installer_id}
+                  options={team.filter((m) => m.active && canInstall(m.trade))}
+                  onChange={(id) => assign(job.id, { installer_id: id })}
                 />
                 <Fact
                   label={t("Instalação")}
@@ -395,6 +405,38 @@ function MaterialEditor({
         </button>
       </div>
     </>
+  );
+}
+
+/** Campo de escalação: escolhe quem fabrica ou quem instala. */
+function AssignFact({
+  label,
+  selected,
+  options,
+  onChange,
+}: {
+  label: string;
+  selected: string | null;
+  options: Profile[];
+  onChange: (id: string | null) => void;
+}) {
+  const { t } = useApp();
+  return (
+    <div className="fact">
+      <div className="fact-label">{label}</div>
+      <select
+        className="assign-select"
+        value={selected ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+      >
+        <option value="">{t("a definir")}</option>
+        {options.map((m) => (
+          <option key={m.id} value={m.id}>
+            {shortName(m.full_name)}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

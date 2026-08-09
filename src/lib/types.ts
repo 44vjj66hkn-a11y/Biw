@@ -1,5 +1,37 @@
 export type JobStatus = "pendente" | "em_producao" | "pronto" | "instalado";
+
+/** Nível de acesso: define qual app a pessoa abre. */
 export type UserRole = "producao" | "gestao";
+
+/** Função na obra: define onde a pessoa pode ser escalada. */
+export type Trade = "fabricante" | "instalador" | "ambos";
+
+export const TRADES: Trade[] = ["fabricante", "instalador", "ambos"];
+
+export const TRADE_LABEL: Record<Trade, string> = {
+  fabricante: "Fabricante",
+  instalador: "Instalador",
+  ambos: "Fabricante e instalador",
+};
+
+export function canFabricate(t: Trade) {
+  return t === "fabricante" || t === "ambos";
+}
+
+export function canInstall(t: Trade) {
+  return t === "instalador" || t === "ambos";
+}
+
+/** Períodos do filtro da visão de gestão. */
+export type Period = "semana" | "mes" | "total";
+
+export const PERIODS: Period[] = ["semana", "mes", "total"];
+
+export const PERIOD_LABEL: Record<Period, string> = {
+  semana: "Semana",
+  mes: "Mês",
+  total: "Total",
+};
 export type PhotoKind = "local" | "medida" | "referencia";
 export type DimensionKind = "largura" | "altura" | "comprimento";
 
@@ -28,9 +60,26 @@ export type Profile = {
   id: string;
   tenant_id: string;
   role: UserRole;
+  trade: Trade;
   full_name: string;
   initials: string;
+  phone: string | null;
+  active: boolean;
 };
+
+export function initialsOf(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? "";
+  const second = parts[1]?.[0] ?? "";
+  return (first + second).toUpperCase();
+}
+
+/** "Marcos Almeida" → "Marcos A." */
+export function shortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length < 2) return fullName;
+  return `${parts[0]} ${parts[1][0]}.`;
+}
 
 export type JobPhoto = {
   id: string;
@@ -78,8 +127,8 @@ export type Job = {
   quantity: number;
   quantity_unit: string;
   description: string | null;
-  fabricator_name: string | null;
-  installer_name: string | null;
+  fabricator_id: string | null;
+  installer_id: string | null;
   material_used: string | null;
   status: JobStatus;
   install_date: string | null;
@@ -108,6 +157,36 @@ export function totalCost(f: {
     (f.fabrication_cost ?? 0) +
     (f.installation_cost ?? 0)
   );
+}
+
+/**
+ * Data que define em qual período o trabalho conta.
+ * Vale a instalação quando já marcada; senão, a abertura do projeto.
+ */
+export function referenceDate(job: Pick<Job, "install_date" | "created_at">) {
+  return job.install_date ?? job.created_at.slice(0, 10);
+}
+
+/** Segunda-feira da semana da data informada, em ISO (YYYY-MM-DD). */
+export function startOfWeek(today: Date): string {
+  const d = new Date(today);
+  const weekday = (d.getDay() + 6) % 7; // 0 = segunda
+  d.setDate(d.getDate() - weekday);
+  return d.toISOString().slice(0, 10);
+}
+
+export function inPeriod(
+  job: Pick<Job, "install_date" | "created_at">,
+  period: Period,
+  today = new Date(),
+): boolean {
+  if (period === "total") return true;
+  const ref = referenceDate(job);
+  if (period === "mes") return ref.slice(0, 7) === today.toISOString().slice(0, 7);
+  const from = startOfWeek(today);
+  const to = new Date(today);
+  to.setDate(to.getDate() + (7 - ((to.getDay() + 6) % 7)));
+  return ref >= from && ref < to.toISOString().slice(0, 10);
 }
 
 export function computeFinancials(input: {

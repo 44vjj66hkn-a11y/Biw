@@ -9,10 +9,12 @@ import { IS_DEMO, useApp } from "@/lib/store";
 
 const NAV_PRODUCAO = [
   { href: "/trabalhos", label: "Trabalhos", icon: "grid" },
+  { href: "/equipe", label: "Equipe", icon: "team" },
 ] as const;
 
 const NAV_GESTAO = [
   { href: "/gestao", label: "Visão geral", icon: "chart" },
+  { href: "/equipe", label: "Equipe", icon: "team" },
 ] as const;
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -28,6 +30,13 @@ const ICONS: Record<string, React.ReactNode> = {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 20h18" />
       <path d="M6 20V10M11 20V4M16 20v-7M21 20v-4" />
+    </svg>
+  ),
+  team: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.5 20a6.5 6.5 0 0113 0" />
+      <path d="M16 5.5a3.2 3.2 0 010 5M18 20a6.4 6.4 0 00-2-4.6" />
     </svg>
   ),
   out: (

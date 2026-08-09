@@ -27,6 +27,7 @@ import {
 import { translate, type Lang } from "./i18n";
 import {
   computeFinancials,
+  initialsOf,
   type DimensionKind,
   type Job,
   type JobNote,
@@ -34,6 +35,7 @@ import {
   type JobStatus,
   type Profile,
   type Tenant,
+  type Trade,
   type UserRole,
 } from "./types";
 
@@ -42,6 +44,13 @@ export const IS_DEMO = !process.env.NEXT_PUBLIC_SUPABASE_URL;
 type Session = {
   profile: Profile;
   tenant: Tenant;
+};
+
+type MemberInput = {
+  full_name: string;
+  trade: Trade;
+  phone: string;
+  role: UserRole;
 };
 
 type NewJobInput = {
@@ -66,7 +75,17 @@ type AppState = {
   photosOf: (jobId: string) => JobPhoto[];
   notesOf: (jobId: string) => JobNote[];
   history: typeof DEMO_HISTORY;
+
+  /** Equipe da unidade: quem pode ser escalado nos projetos. */
   team: Profile[];
+  memberById: (id: string | null) => Profile | undefined;
+  addMember: (input: MemberInput) => void;
+  updateMember: (id: string, input: MemberInput) => void;
+  setMemberActive: (id: string, active: boolean) => void;
+  assign: (
+    jobId: string,
+    who: { fabricator_id?: string | null; installer_id?: string | null },
+  ) => void;
 
   setStatus: (jobId: string, status: JobStatus) => void;
   setMaterial: (jobId: string, material: string) => void;
@@ -99,6 +118,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<Job[]>(() => buildDemoJobs());
   const [photos, setPhotos] = useState<JobPhoto[]>(() => [...DEMO_PHOTOS]);
   const [notes, setNotes] = useState<JobNote[]>(() => [...DEMO_NOTES]);
+  const [team, setTeam] = useState<Profile[]>(() => [...DEMO_PROFILES]);
 
   const t = useCallback((key: string) => translate(key, lang), [lang]);
 
@@ -182,6 +202,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const addMember = useCallback<AppState["addMember"]>(
+    (input) => {
+      const tenantId = session?.tenant.id ?? DEMO_TENANTS[0].id;
+      setTeam((all) => [
+        ...all,
+        {
+          id: uid(),
+          tenant_id: tenantId,
+          role: input.role,
+          trade: input.trade,
+          full_name: input.full_name,
+          initials: initialsOf(input.full_name),
+          phone: input.phone || null,
+          active: true,
+        },
+      ]);
+    },
+    [session],
+  );
+
+  const updateMember = useCallback<AppState["updateMember"]>((id, input) => {
+    setTeam((all) =>
+      all.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              full_name: input.full_name,
+              initials: initialsOf(input.full_name),
+              trade: input.trade,
+              phone: input.phone || null,
+              role: input.role,
+            }
+          : m,
+      ),
+    );
+  }, []);
+
+  const setMemberActive = useCallback<AppState["setMemberActive"]>(
+    (id, active) =>
+      setTeam((all) => all.map((m) => (m.id === id ? { ...m, active } : m))),
+    [],
+  );
+
+  const assign = useCallback<AppState["assign"]>(
+    (jobId, who) => patchJob(jobId, who),
+    [patchJob],
+  );
+
   const createJob = useCallback<AppState["createJob"]>(
     (input) => {
       const tenantId = session?.tenant.id ?? DEMO_TENANTS[0].id;
@@ -196,8 +264,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         quantity: input.quantity,
         quantity_unit: input.quantity_unit,
         description: input.description || null,
-        fabricator_name: null,
-        installer_name: null,
+        fabricator_id: null,
+        installer_id: null,
         material_used: null,
         status: "pendente",
         install_date: null,
@@ -239,7 +307,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
           .filter((n) => n.job_id === jobId)
           .sort((a, b) => b.created_at.localeCompare(a.created_at)),
       history: DEMO_HISTORY,
-      team: DEMO_PROFILES.filter((p) => p.role === "producao"),
+      team,
+      memberById: (id) => (id ? team.find((m) => m.id === id) : undefined),
+      addMember,
+      updateMember,
+      setMemberActive,
+      assign,
       setStatus,
       setMaterial,
       addNote,
@@ -256,6 +329,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       jobs,
       photos,
       notes,
+      team,
+      addMember,
+      updateMember,
+      setMemberActive,
+      assign,
       setStatus,
       setMaterial,
       addNote,
