@@ -261,6 +261,7 @@ const DICT: Record<string, Entry> = {
       "La cantidad y la foto de referencia de arriba son lo acordado con el cliente. Ante cualquier diferencia, hable con la gestión antes de cortar material.",
     ],
   "Meus recebimentos": ["My earnings", "Mis cobros"],
+  "você": ["you", "usted"],
   "A receber nesta semana": ["Due this week", "A cobrar esta semana"],
   "A receber neste mês": ["Due this month", "A cobrar este mes"],
   "Já recebido no mês": ["Received this month", "Ya cobrado en el mes"],

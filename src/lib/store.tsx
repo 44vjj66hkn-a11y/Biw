@@ -72,6 +72,12 @@ type AppState = {
   signIn: (tenantId: string, role: UserRole) => void;
   signOut: () => void;
 
+  /**
+   * Trabalhos que a pessoa logada pode ver.
+   * A gestão enxerga a unidade inteira; quem é da produção enxerga
+   * apenas os trabalhos em que está escalado, como fabricante ou
+   * como instalador.
+   */
   jobs: Job[];
   jobById: (id: string) => Job | undefined;
   photosOf: (jobId: string) => JobPhoto[];
@@ -327,6 +333,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const visibleJobs = useMemo(() => {
+    if (!session) return [];
+    if (session.profile.role === "gestao") return jobs;
+    const me = session.profile.id;
+    return jobs.filter((j) => j.fabricator_id === me || j.installer_id === me);
+  }, [jobs, session]);
+
   const value = useMemo<AppState>(
     () => ({
       lang,
@@ -335,8 +348,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       session,
       signIn,
       signOut,
-      jobs,
-      jobById: (id) => jobs.find((j) => j.id === id),
+      jobs: visibleJobs,
+      jobById: (id) => visibleJobs.find((j) => j.id === id),
       photosOf: (jobId) => photos.filter((p) => p.job_id === jobId),
       notesOf: (jobId) =>
         notes
@@ -365,7 +378,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       session,
       signIn,
       signOut,
-      jobs,
+      visibleJobs,
       photos,
       notes,
       team,

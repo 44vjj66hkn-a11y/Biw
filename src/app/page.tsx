@@ -30,6 +30,7 @@ export default function LoginPage() {
       <aside className="login-brand">
         <div className="logo-box">
           <Logo />
+          <div className="logo-caption">BIW — Project Management</div>
         </div>
         <div style={{ position: "relative", zIndex: 1, maxWidth: 440 }}>
           <h2

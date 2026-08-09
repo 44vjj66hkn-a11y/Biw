@@ -3,9 +3,9 @@ import { AppProvider } from "@/lib/store";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Boston Iron Works — Gestão de Produção",
+  title: "BIW — Project Management",
   description:
-    "Gestão de produção de guarda-corpos e esquadrias para as unidades da franquia.",
+    "Boston Iron Works — gestão de produção de guarda-corpos e esquadrias para as unidades da franquia.",
 };
 
 export const viewport: Viewport = {

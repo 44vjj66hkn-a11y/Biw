@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { BrandHeader } from "@/components/Logo";
 import { useMemo } from "react";
 import {
   Avatar,
@@ -55,7 +56,9 @@ export default function TrabalhosPage() {
   )[0];
 
   return (
-    <div className="grid12">
+    <>
+      <BrandHeader subtitle={t("Produção")} />
+      <div className="grid12">
       <section className="panel c8">
         <div className="panel-head">
           <span className="panel-title">{t("Em produção agora")}</span>
@@ -171,18 +174,19 @@ export default function TrabalhosPage() {
         </div>
       </section>
 
+      {/*
+        Só a lista de quem está na equipe, para saber a quem recorrer.
+        Sem contagem de trabalhos: como você enxerga apenas os seus,
+        um número aqui falaria de você, não da pessoa — e enganaria.
+      */}
       <section className="panel c4">
         <div className="panel-head">
-          <span className="panel-title">{t("Equipe do mês")}</span>
+          <span className="panel-title">{t("Equipe da unidade")}</span>
         </div>
         <div className="list">
           {team
             .filter((p) => p.active)
-            .map((p) => {
-            const feitos = jobs.filter(
-              (j) => j.fabricator_id === p.id || j.installer_id === p.id,
-            ).length;
-            return (
+            .map((p) => (
               <div className="list-item" key={p.id}>
                 <Avatar initials={p.initials} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -190,13 +194,26 @@ export default function TrabalhosPage() {
                     {p.full_name}
                   </div>
                   <div style={{ fontSize: 14, color: "var(--faint)" }}>
-                    {t(TRADE_LABEL[p.trade])} · {feitos}{" "}
-                    {t("Trabalhos").toLowerCase()}
+                    {t(TRADE_LABEL[p.trade])}
+                    {p.id === session?.profile.id && ` · ${t("você")}`}
                   </div>
                 </div>
+                {p.phone && (
+                  <a
+                    href={`tel:${p.phone.replace(/\D/g, "")}`}
+                    className="num"
+                    style={{
+                      fontSize: 14,
+                      color: "var(--muted)",
+                      textDecoration: "none",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {p.phone}
+                  </a>
+                )}
               </div>
-            );
-          })}
+            ))}
         </div>
       </section>
 
@@ -277,6 +294,7 @@ export default function TrabalhosPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }
 

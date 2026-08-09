@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { BrandHeader } from "@/components/Logo";
 import { useMemo, useState } from "react";
 import { ChartLegend, CostProfitChart } from "@/components/CostProfitChart";
 import {
@@ -142,7 +143,9 @@ export default function GestaoPage() {
   );
 
   return (
-    <div className="grid12">
+    <>
+      <BrandHeader subtitle={t("Gestão")} />
+      <div className="grid12">
       <section className="panel c12">
         <div className="panel-head">
           <span className="panel-title">{t("Resultado")}</span>
@@ -411,6 +414,7 @@ export default function GestaoPage() {
         </p>
       </section>
     </div>
+    </>
   );
 }
 

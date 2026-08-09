@@ -13,9 +13,11 @@ import {
 } from "@/lib/types";
 
 export default function EquipePage() {
-  const { team, jobs, t, addMember, updateMember, setMemberActive } = useApp();
+  const { team, jobs, t, session, addMember, updateMember, setMemberActive } =
+    useApp();
   const [editing, setEditing] = useState<Profile | null>(null);
   const [creating, setCreating] = useState(false);
+  const canManage = session?.profile.role === "gestao";
 
   const ativos = team.filter((m) => m.active);
   const inativos = team.filter((m) => !m.active);
@@ -25,16 +27,18 @@ export default function EquipePage() {
       <section className="panel c12">
         <div className="panel-head">
           <span className="panel-title">{t("Equipe da unidade")}</span>
-          <button
-            type="button"
-            className="tool tool-accent"
-            onClick={() => {
-              setEditing(null);
-              setCreating(true);
-            }}
-          >
-            + {t("Adicionar pessoa")}
-          </button>
+          {canManage && (
+            <button
+              type="button"
+              className="tool tool-accent"
+              onClick={() => {
+                setEditing(null);
+                setCreating(true);
+              }}
+            >
+              + {t("Adicionar pessoa")}
+            </button>
+          )}
         </div>
 
         <p className="hint" style={{ margin: "0 0 16px" }}>
@@ -43,7 +47,7 @@ export default function EquipePage() {
           )}
         </p>
 
-        {(creating || editing) && (
+        {canManage && (creating || editing) && (
           <MemberForm
             key={editing?.id ?? "novo"}
             member={editing}
@@ -66,6 +70,7 @@ export default function EquipePage() {
               key={m.id}
               member={m}
               jobsCount={countOf(jobs, m.id)}
+              canManage={canManage}
               onEdit={() => {
                 setCreating(false);
                 setEditing(m);
@@ -88,6 +93,7 @@ export default function EquipePage() {
                   member={m}
                   jobsCount={countOf(jobs, m.id)}
                   inactive
+                  canManage={canManage}
                   onEdit={() => setEditing(m)}
                   onToggle={() => setMemberActive(m.id, true)}
                 />
@@ -121,17 +127,22 @@ function MemberCard({
   member,
   jobsCount,
   inactive = false,
+  canManage,
   onEdit,
   onToggle,
 }: {
   member: Profile;
   jobsCount: { fabricados: number; instalados: number; faturamento: number };
   inactive?: boolean;
+  canManage: boolean;
   onEdit: () => void;
   onToggle: () => void;
 }) {
   const { t, session } = useApp();
   const isGestao = session?.profile.role === "gestao";
+  // quem é da produção só enxerga os próprios números
+  const isSelf = session?.profile.id === member.id;
+  const showStats = isGestao || isSelf;
 
   return (
     <article className="member" data-inactive={inactive}>
@@ -152,31 +163,29 @@ function MemberCard({
         <div className="member-phone num">{member.phone}</div>
       )}
 
-      <div className="member-stats">
-        <Stat
-          label={t("Fabricou")}
-          value={String(jobsCount.fabricados)}
-        />
-        <Stat
-          label={t("Instalou")}
-          value={String(jobsCount.instalados)}
-        />
-        {isGestao && (
-          <Stat
-            label={t("Faturamento")}
-            value={formatMoney(jobsCount.faturamento)}
-          />
-        )}
-      </div>
+      {showStats && (
+        <div className="member-stats">
+          <Stat label={t("Fabricou")} value={String(jobsCount.fabricados)} />
+          <Stat label={t("Instalou")} value={String(jobsCount.instalados)} />
+          {isGestao && (
+            <Stat
+              label={t("Faturamento")}
+              value={formatMoney(jobsCount.faturamento)}
+            />
+          )}
+        </div>
+      )}
 
-      <div className="member-actions">
-        <button type="button" className="tool" onClick={onEdit}>
-          {t("Editar")}
-        </button>
-        <button type="button" className="tool" onClick={onToggle}>
-          {inactive ? t("Trazer de volta") : t("Tirar da equipe")}
-        </button>
-      </div>
+      {canManage && (
+        <div className="member-actions">
+          <button type="button" className="tool" onClick={onEdit}>
+            {t("Editar")}
+          </button>
+          <button type="button" className="tool" onClick={onToggle}>
+            {inactive ? t("Trazer de volta") : t("Tirar da equipe")}
+          </button>
+        </div>
+      )}
     </article>
   );
 }
