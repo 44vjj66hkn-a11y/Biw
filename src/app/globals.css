@@ -1,0 +1,381 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Boston Iron Works — sistema visual
+   Tema escuro assumido. Verde da marca no app de Produção,
+   dourado no app de Gestão (troca via [data-role] no <body>).
+   ============================================================ */
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+    monospace;
+}
+
+:root {
+  --bg: #0a0c0b;
+  --card: #141614;
+  --card-2: #1b1e1c;
+  --card-3: #232724;
+  --border: #282d29;
+  --border-soft: #20241f;
+
+  --text: #f0f3f1;
+  --muted: #98a29b;
+  --faint: #69736c;
+
+  --brand: #22b268;
+  --brand-deep: #189c55;
+  --brand-dim: #0f2e1d;
+  --brand-line: #1e5236;
+
+  --ges: #c9a227;
+  --ges-dim: #2c2410;
+  --ges-line: #5a4a14;
+
+  --good: #34c77b;
+  --bad: #e5544f;
+  --info: #4e9bd6;
+
+  --chart-lucro: #2fa867;
+  --chart-custo: #4292ce;
+
+  --st-pend-bg: #24282a;
+  --st-pend-fg: #98a29b;
+  --st-prod-bg: #3a2e15;
+  --st-prod-fg: #e2a33c;
+  --st-ready-bg: #14303f;
+  --st-ready-fg: #6fb8df;
+  --st-inst-bg: #10331f;
+  --st-inst-fg: #3fcb84;
+
+  --r-lg: 20px;
+  --r-md: 14px;
+  --r-sm: 10px;
+
+  /* acento do app corrente */
+  --accent: var(--brand);
+  --accent-dim: var(--brand-dim);
+  --accent-line: var(--brand-line);
+  --accent-ink: #04170d;
+}
+
+body[data-role="gestao"] {
+  --accent: var(--ges);
+  --accent-dim: var(--ges-dim);
+  --accent-line: var(--ges-line);
+  --accent-ink: #171203;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+/* ---------- primitivos reutilizados ---------- */
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 19px;
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.tool:hover {
+  color: var(--text);
+  border-color: var(--accent-line);
+}
+
+.tool-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.hint {
+  font-size: 15px;
+  color: var(--faint);
+  line-height: 1.6;
+}
+
+.grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.c4 {
+  grid-column: span 4;
+}
+.c8 {
+  grid-column: span 8;
+}
+.c12 {
+  grid-column: span 12;
+}
+
+@media (max-width: 1080px) {
+  .c4,
+  .c8 {
+    grid-column: span 12;
+  }
+}
+
+/* ---------- pílula de status ---------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pill::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pill-pendente {
+  background: var(--st-pend-bg);
+  color: var(--st-pend-fg);
+}
+.pill-em_producao {
+  background: var(--st-prod-bg);
+  color: var(--st-prod-fg);
+}
+.pill-pronto {
+  background: var(--st-ready-bg);
+  color: var(--st-ready-fg);
+}
+.pill-instalado {
+  background: var(--st-inst-bg);
+  color: var(--st-inst-fg);
+}
+
+/* ---------- foto (placeholder + real) ---------- */
+.photo {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 7%);
+  background: linear-gradient(145deg, #2b3134 0%, #404a50 45%, #1d2225 100%);
+}
+
+.photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: rgb(255 255 255 / 60%);
+}
+
+.photo-glass {
+  background: linear-gradient(145deg, #1d2b33 0%, #31474f 45%, #161f24 100%);
+}
+.photo-warm {
+  background: linear-gradient(145deg, #332b22 0%, #4c4136 45%, #221d18 100%);
+}
+.photo-night {
+  background: linear-gradient(145deg, #23292b 0%, #39423f 45%, #181c1a 100%);
+}
+.photo-moss {
+  background: linear-gradient(145deg, #1f2c24 0%, #33453a 45%, #161e19 100%);
+}
+.photo-sky {
+  background: linear-gradient(160deg, #2e3e4a 0%, #4a6072 40%, #1c262e 100%);
+}
+.photo-dusk {
+  background: linear-gradient(160deg, #3a3340 0%, #524659 42%, #211d25 100%);
+}
+
+/* ---------- tabela ---------- */
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.table-scroll table {
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  width: 100%;
+  min-width: 680px;
+}
+
+.table-scroll thead th {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 0 14px 6px;
+  white-space: nowrap;
+}
+
+.table-scroll tbody tr {
+  background: var(--card-2);
+  cursor: pointer;
+}
+
+.table-scroll tbody tr:hover {
+  background: var(--card-3);
+}
+
+.table-scroll tbody td {
+  padding: 13px 14px;
+  font-size: 16px;
+  white-space: nowrap;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.table-scroll tbody td:first-child {
+  white-space: normal;
+  border-left: 1px solid var(--border-soft);
+  border-radius: var(--r-sm) 0 0 var(--r-sm);
+}
+
+.table-scroll tbody td:last-child {
+  border-right: 1px solid var(--border-soft);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+
+.table-scroll .r {
+  text-align: right;
+}
+
+/* ---------- campos ---------- */
+.field-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 7px;
+}
+
+.input {
+  width: 100%;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 13px 14px;
+  font: inherit;
+  font-size: 17px;
+  color: var(--text);
+}
+
+.input::placeholder {
+  color: var(--faint);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+textarea.input {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.6;
+}
+
+.btn {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  padding: 12px 19px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: var(--card-3);
+  color: var(--muted);
+}
