@@ -161,6 +161,8 @@ type Seed = Omit<Job, "photo_count" | "reference_photo" | "financials"> & {
     material_cost: number | null;
     fabrication_cost: number | null;
     installation_cost: number | null;
+    fabricator_paid_at?: string | null;
+    installer_paid_at?: string | null;
   };
 };
 
@@ -208,6 +210,8 @@ const SEEDS: Seed[] = [
       material_cost: 1200,
       fabrication_cost: 620,
       installation_cost: 350,
+      fabricator_paid_at: "2026-08-06",
+      installer_paid_at: "2026-08-06",
     },
   },
   {

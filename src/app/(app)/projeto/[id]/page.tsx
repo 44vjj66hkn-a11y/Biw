@@ -40,6 +40,8 @@ export default function ProjetoPage() {
     setFinancials,
     team,
     assign,
+    myPayout,
+    markPaid,
   } = useApp();
 
   const job = jobById(id);
@@ -64,6 +66,7 @@ export default function ProjetoPage() {
   const notes = notesOf(job.id);
 
   const backHref = isGestao ? "/gestao" : "/trabalhos";
+  const payout = myPayout(job);
 
   return (
     <>
@@ -78,6 +81,42 @@ export default function ProjetoPage() {
       </div>
 
       <div className="grid12">
+        {/*
+          Referência e quantidade em destaque no topo: são os dois
+          pontos que mais geram erro na produção, então não competem
+          com o resto da tela.
+        */}
+        <section className="panel c12 key-facts">
+          <div className="key-photo">
+            <Photo
+              photo={referencia}
+              fallbackSketch="vert"
+              style={{ width: "100%", height: "100%" }}
+            />
+            <span className="key-photo-tag">{t("Foto de referência")}</span>
+          </div>
+
+          <div className="key-qty">
+            <div className="key-label">{t("Quantidade")}</div>
+            <div className="key-qty-value num">
+              {job.quantity}
+              <span className="key-qty-unit">{job.quantity_unit}</span>
+            </div>
+            {job.description && (
+              <div className="key-desc">{job.description}</div>
+            )}
+          </div>
+
+          <div className="key-side">
+            <div className="key-label">{t("Confira antes de produzir")}</div>
+            <p className="key-check">
+              {t(
+                "A quantidade e a foto de referência acima são o que foi combinado com o cliente. Qualquer diferença, fale com a gestão antes de cortar material.",
+              )}
+            </p>
+          </div>
+        </section>
+
         {/* ---------- cabeçalho ---------- */}
         <section className="panel c8">
           <div className="hero">
@@ -86,16 +125,6 @@ export default function ProjetoPage() {
               <p className="hero-line">
                 <span className="hero-ico">{Icon.pin}</span>
                 <span>{job.address}</span>
-              </p>
-              <p className="hero-line">
-                <span className="hero-ico">{Icon.box}</span>
-                <span>
-                  {t("Quantidade")}:{" "}
-                  <b style={{ color: "var(--text)" }}>
-                    {job.quantity} {job.quantity_unit}
-                  </b>
-                  {job.description ? ` · ${job.description}` : ""}
-                </span>
               </p>
 
               <div className="hero-facts">
@@ -119,11 +148,6 @@ export default function ProjetoPage() {
               </div>
             </div>
 
-            <Photo
-              photo={referencia}
-              fallbackSketch="vert"
-              className="hero-photo"
-            />
           </div>
 
           <div className="rule" />
@@ -169,22 +193,23 @@ export default function ProjetoPage() {
             {t("Toque na etapa para avançar o trabalho.")}
           </p>
 
-          <div className="rule" />
-
-          <div className="panel-head" style={{ marginBottom: 11 }}>
-            <span className="panel-title" style={{ fontSize: 17 }}>
-              {t("Foto de referência")}
-            </span>
-          </div>
-          {referencia ? (
-            <Photo
-              photo={referencia}
-              style={{ width: "100%", height: 150, borderRadius: "var(--r-md)" }}
-            />
-          ) : (
-            <p className="hint" style={{ margin: 0 }}>
-              {t("Sem foto de referência")}
-            </p>
+          {payout && (
+            <>
+              <div className="rule" />
+              <div className="payout-box" data-paid={payout.paid}>
+                <div>
+                  <div className="key-label" style={{ marginBottom: 6 }}>
+                    {payout.paid ? t("Você recebeu") : t("Você recebe")}
+                  </div>
+                  <div className="payout-amount num">
+                    {formatMoney(payout.amount)}
+                  </div>
+                </div>
+                <span className="payout-tag">
+                  {payout.paid ? t("Pago") : t("A receber")}
+                </span>
+              </div>
+            </>
           )}
         </section>
 
@@ -333,12 +358,17 @@ export default function ProjetoPage() {
 
         {/* ---------- financeiro: só gestão ---------- */}
         {isGestao ? (
-          <FinancialPanel key={job.id} jobId={job.id} onSave={setFinancials} />
+          <FinancialPanel
+            key={job.id}
+            jobId={job.id}
+            onSave={setFinancials}
+            onMarkPaid={markPaid}
+          />
         ) : (
           <section className="panel c12">
             <p className="hint" style={{ margin: 0 }}>
               {t(
-                "Este é o app de Produção: fotos, medidas, material e observações. Valores, custos e lucro não existem aqui — nem na tela, nem na API.",
+                "Você vê o que recebe por este trabalho. O valor cobrado do cliente, o custo do material e a margem ficam só com a gestão — nem na tela, nem na API.",
               )}
             </p>
           </section>
@@ -478,11 +508,13 @@ function Shot({ photo }: { photo: JobPhoto }) {
 function FinancialPanel({
   jobId,
   onSave,
+  onMarkPaid,
 }: {
   jobId: string;
   onSave: ReturnType<typeof useApp>["setFinancials"];
+  onMarkPaid: ReturnType<typeof useApp>["markPaid"];
 }) {
-  const { t, lang, jobById } = useApp();
+  const { t, lang, jobById, memberById } = useApp();
   const job = jobById(jobId);
   const f = job?.financials;
 
@@ -537,12 +569,70 @@ function FinancialPanel({
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
-        <button type="button" className="btn" onClick={() => onSave(jobId, values)}>
+      <div className="pay-row">
+        <PayChip
+          label={t("Fabricante")}
+          person={memberById(job?.fabricator_id ?? null)?.full_name}
+          amount={values.fabrication_cost}
+          paidAt={f?.fabricator_paid_at ?? null}
+          onPay={() => onMarkPaid(jobId, "fabricante")}
+        />
+        <PayChip
+          label={t("Instalador")}
+          person={memberById(job?.installer_id ?? null)?.full_name}
+          amount={values.installation_cost}
+          paidAt={f?.installer_paid_at ?? null}
+          onPay={() => onMarkPaid(jobId, "instalador")}
+        />
+        <button
+          type="button"
+          className="btn"
+          style={{ marginLeft: "auto" }}
+          onClick={() => onSave(jobId, values)}
+        >
           {t("Salvar")}
         </button>
       </div>
     </section>
+  );
+}
+
+/** Situação do pagamento de quem trabalhou no projeto. */
+function PayChip({
+  label,
+  person,
+  amount,
+  paidAt,
+  onPay,
+}: {
+  label: string;
+  person?: string;
+  amount: number | null;
+  paidAt: string | null;
+  onPay: () => void;
+}) {
+  const { t, lang } = useApp();
+  if (!person || amount === null) return null;
+  return (
+    <div className="pay-chip" data-paid={paidAt !== null}>
+      <div>
+        <div className="key-label" style={{ marginBottom: 4 }}>
+          {label} · {shortName(person)}
+        </div>
+        <div className="num" style={{ fontSize: 18, fontWeight: 800 }}>
+          {formatMoney(amount)}
+        </div>
+      </div>
+      {paidAt ? (
+        <span className="payout-tag">
+          {t("Pago")} {formatDayMonth(paidAt, lang)}
+        </span>
+      ) : (
+        <button type="button" className="tool" onClick={onPay}>
+          {t("Marcar como pago")}
+        </button>
+      )}
+    </div>
   );
 }
 

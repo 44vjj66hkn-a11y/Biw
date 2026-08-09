@@ -111,12 +111,53 @@ export type JobNote = {
 export type JobFinancials = {
   sale_price: number | null;
   material_cost: number | null;
+  /** O que o fabricante recebe por este trabalho. */
   fabrication_cost: number | null;
+  /** O que o instalador recebe por este trabalho. */
   installation_cost: number | null;
   total_cost: number;
   profit: number;
   profit_percent: number | null;
+  fabricator_paid_at: string | null;
+  installer_paid_at: string | null;
 };
+
+/**
+ * Quanto a pessoa recebe por um trabalho, e se já recebeu.
+ *
+ * É o único número da parte financeira que a produção enxerga, e só
+ * do próprio trabalho: nunca o valor cobrado do cliente, o custo do
+ * material nem a margem. No banco isso vem de uma função dedicada,
+ * não da tabela financeira.
+ */
+export type Payout = {
+  amount: number;
+  role: "fabricante" | "instalador";
+  paid: boolean;
+};
+
+export function payoutFor(
+  job: Pick<Job, "fabricator_id" | "installer_id" | "financials">,
+  personId: string,
+): Payout | null {
+  const f = job.financials;
+  if (!f) return null;
+  if (job.fabricator_id === personId && f.fabrication_cost !== null) {
+    return {
+      amount: f.fabrication_cost,
+      role: "fabricante",
+      paid: f.fabricator_paid_at !== null,
+    };
+  }
+  if (job.installer_id === personId && f.installation_cost !== null) {
+    return {
+      amount: f.installation_cost,
+      role: "instalador",
+      paid: f.installer_paid_at !== null,
+    };
+  }
+  return null;
+}
 
 export type Job = {
   id: string;
@@ -194,11 +235,15 @@ export function computeFinancials(input: {
   material_cost: number | null;
   fabrication_cost: number | null;
   installation_cost: number | null;
+  fabricator_paid_at?: string | null;
+  installer_paid_at?: string | null;
 }): JobFinancials {
   const cost = totalCost(input);
   const sale = input.sale_price ?? 0;
   return {
     ...input,
+    fabricator_paid_at: input.fabricator_paid_at ?? null,
+    installer_paid_at: input.installer_paid_at ?? null,
     total_cost: cost,
     profit: sale - cost,
     profit_percent: sale === 0 ? null : ((sale - cost) / sale) * 100,

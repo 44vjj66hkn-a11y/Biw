@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import {
   Avatar,
   Icon,
@@ -9,13 +10,42 @@ import {
   StatTile,
   StatusPill,
 } from "@/components/ui";
-import { formatDayMonth } from "@/lib/i18n";
+import { formatDayMonth, formatMoney } from "@/lib/i18n";
 import { useApp } from "@/lib/store";
-import { shortName, TRADE_LABEL, type Job } from "@/lib/types";
+import { inPeriod, shortName, TRADE_LABEL, type Job } from "@/lib/types";
 
 export default function TrabalhosPage() {
-  const { jobs, lang, t, team, memberById } = useApp();
+  const { jobs, lang, t, team, memberById, myPayout, session } = useApp();
   const router = useRouter();
+
+  /** Soma o que a pessoa logada tem a receber, por recorte de tempo. */
+  const receber = useMemo(() => {
+    let semana = 0;
+    let semanaCount = 0;
+    let mes = 0;
+    let mesCount = 0;
+    let pagoMes = 0;
+    let total = 0;
+    for (const job of jobs) {
+      const p = myPayout(job);
+      if (!p) continue;
+      const noMes = inPeriod(job, "mes");
+      if (p.paid) {
+        if (noMes) pagoMes += p.amount;
+        continue;
+      }
+      total += p.amount;
+      if (noMes) {
+        mes += p.amount;
+        mesCount += 1;
+      }
+      if (inPeriod(job, "semana")) {
+        semana += p.amount;
+        semanaCount += 1;
+      }
+    }
+    return { semana, semanaCount, mes, mesCount, pagoMes, total };
+  }, [jobs, myPayout]);
 
   const emProducao = jobs.filter((j) => j.status === "em_producao");
   const prontos = jobs.filter((j) => j.status === "pronto");
@@ -54,6 +84,55 @@ export default function TrabalhosPage() {
             {t("Nenhum trabalho neste mês.")}
           </p>
         )}
+      </section>
+
+      {/*
+        Recebimentos da própria pessoa. É o único número financeiro
+        que a produção enxerga — e só o dela.
+      */}
+      <section className="panel c12">
+        <div className="panel-head">
+          <span className="panel-title">{t("Meus recebimentos")}</span>
+          <span className="tool">{session?.profile.full_name}</span>
+        </div>
+        <div className="kpis">
+          <StatTile
+            label={t("A receber nesta semana")}
+            value={formatMoney(receber.semana)}
+            icon={Icon.money}
+            iconBg="var(--brand-dim)"
+            iconFg="var(--brand)"
+            note={`${receber.semanaCount} ${t("Trabalhos").toLowerCase()}`}
+          />
+          <StatTile
+            label={t("A receber neste mês")}
+            value={formatMoney(receber.mes)}
+            icon={Icon.money}
+            iconBg="var(--brand-dim)"
+            iconFg="var(--brand)"
+            note={`${receber.mesCount} ${t("Trabalhos").toLowerCase()}`}
+            highlight
+          />
+          <StatTile
+            label={t("Já recebido no mês")}
+            value={formatMoney(receber.pagoMes)}
+            icon={Icon.check}
+            iconBg="var(--st-inst-bg)"
+            iconFg="var(--st-inst-fg)"
+          />
+          <StatTile
+            label={t("A receber no total")}
+            value={formatMoney(receber.total)}
+            icon={Icon.trend}
+            iconBg="rgb(66 146 206 / 14%)"
+            iconFg="var(--info)"
+          />
+        </div>
+        <p className="hint" style={{ marginTop: 14 }}>
+          {t(
+            "Conta pela data de instalação; sem data marcada, pela abertura do projeto. Some só os trabalhos em que você está escalado.",
+          )}
+        </p>
       </section>
 
       <section className="panel c12">
@@ -137,9 +216,9 @@ export default function TrabalhosPage() {
                 <th>{t("Cliente / Endereço")}</th>
                 <th>{t("Referência")}</th>
                 <th>{t("Qtd")}</th>
+                <th className="r">{t("Você recebe")}</th>
                 <th>{t("Fabricante")}</th>
                 <th>{t("Instalador")}</th>
-                <th>{t("Fotos")}</th>
                 <th>{t("Instalação")}</th>
                 <th>{t("Status")}</th>
               </tr>
@@ -168,6 +247,9 @@ export default function TrabalhosPage() {
                   <td className="num">
                     {job.quantity} {job.quantity_unit}
                   </td>
+                  <td className="r num">
+                    <PayoutCell job={job} />
+                  </td>
                   <td>
                     {memberById(job.fabricator_id)
                       ? shortName(memberById(job.fabricator_id)!.full_name)
@@ -178,7 +260,6 @@ export default function TrabalhosPage() {
                       ? shortName(memberById(job.installer_id)!.full_name)
                       : <Dash />}
                   </td>
-                  <td className="num">{job.photo_count}</td>
                   <td className="num">
                     {formatDayMonth(job.install_date, lang) ?? (
                       <span style={{ color: "var(--faint)" }}>
@@ -201,6 +282,23 @@ export default function TrabalhosPage() {
 
 function Dash() {
   return <span style={{ color: "var(--faint)" }}>—</span>;
+}
+
+/** O que a pessoa logada recebe por este trabalho. */
+function PayoutCell({ job }: { job: Job }) {
+  const { myPayout, t } = useApp();
+  const p = myPayout(job);
+  if (!p) return <Dash />;
+  return (
+    <span style={{ fontWeight: 800, color: p.paid ? "var(--faint)" : "var(--brand)" }}>
+      {formatMoney(p.amount)}
+      {p.paid && (
+        <span style={{ fontSize: 13, marginLeft: 6, fontWeight: 700 }}>
+          {t("Pago")}
+        </span>
+      )}
+    </span>
+  );
 }
 
 function JobMini({ job }: { job: Job }) {

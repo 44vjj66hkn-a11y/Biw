@@ -1354,3 +1354,199 @@ textarea.input {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   Destaque de referência e quantidade na tela do projeto
+   Os dois pontos que mais geram erro na produção.
+   ============================================================ */
+
+.key-facts {
+  display: grid;
+  grid-template-columns: 260px minmax(200px, 320px) 1fr;
+  gap: 22px;
+  align-items: stretch;
+  border-color: var(--accent-line);
+  background: linear-gradient(
+    100deg,
+    var(--accent-dim) 0%,
+    var(--card) 55%
+  );
+}
+
+.key-photo {
+  position: relative;
+  height: 210px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.key-photo-tag {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  background: rgb(8 12 10 / 78%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.key-label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.key-qty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.key-qty-value {
+  font-size: 84px;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.key-qty-unit {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.key-desc {
+  font-size: 19px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+.key-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  border-left: 1px solid var(--border);
+  padding-left: 22px;
+}
+
+.key-check {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- recebimento da pessoa ---------- */
+
+.payout-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--brand-dim);
+  border: 1px solid var(--brand-line);
+  border-radius: var(--r-md);
+  padding: 15px 17px;
+}
+
+.payout-box[data-paid="true"] {
+  background: var(--card-2);
+  border-color: var(--border-soft);
+}
+
+.payout-amount {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--brand);
+}
+
+.payout-box[data-paid="true"] .payout-amount {
+  color: var(--muted);
+}
+
+.payout-tag {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 11px;
+  border-radius: 7px;
+  background: var(--st-inst-bg);
+  color: var(--st-inst-fg);
+  white-space: nowrap;
+}
+
+.payout-box[data-paid="false"] .payout-tag {
+  background: var(--st-prod-bg);
+  color: var(--st-prod-fg);
+}
+
+/* ---------- pagamentos, na visão de gestão ---------- */
+
+.pay-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.pay-chip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 11px 15px;
+}
+
+.pay-chip[data-paid="true"] {
+  border-color: var(--brand-line);
+}
+
+@media (max-width: 1080px) {
+  .key-facts {
+    grid-template-columns: 220px 1fr;
+  }
+
+  .key-side {
+    grid-column: 1 / -1;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .key-facts {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .key-photo {
+    height: 190px;
+  }
+
+  .key-qty-value {
+    font-size: 66px;
+  }
+}

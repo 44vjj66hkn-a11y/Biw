@@ -28,11 +28,13 @@ import { translate, type Lang } from "./i18n";
 import {
   computeFinancials,
   initialsOf,
+  payoutFor,
   type DimensionKind,
   type Job,
   type JobNote,
   type JobPhoto,
   type JobStatus,
+  type Payout,
   type Profile,
   type Tenant,
   type Trade,
@@ -97,6 +99,10 @@ type AppState = {
     dimension?: { value: number; kind: DimensionKind },
   ) => void;
   createJob: (input: NewJobInput) => Job;
+
+  /** Quanto o usuário logado recebe por este trabalho (ou null). */
+  myPayout: (job: Job) => Payout | null;
+  markPaid: (jobId: string, who: "fabricante" | "instalador") => void;
   setFinancials: (
     jobId: string,
     values: {
@@ -285,10 +291,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [jobs, session],
   );
 
+  const markPaid = useCallback<AppState["markPaid"]>(
+    (jobId, who) => {
+      const today = new Date().toISOString().slice(0, 10);
+      setJobs((all) =>
+        all.map((j) => {
+          if (j.id !== jobId || !j.financials) return j;
+          const f = { ...j.financials };
+          if (who === "fabricante") f.fabricator_paid_at = today;
+          else f.installer_paid_at = today;
+          return { ...j, financials: f };
+        }),
+      );
+    },
+    [],
+  );
+
   const setFinancials = useCallback<AppState["setFinancials"]>(
     (jobId, values) =>
-      patchJob(jobId, { financials: computeFinancials(values) }),
-    [patchJob],
+      setJobs((all) =>
+        all.map((j) =>
+          j.id === jobId
+            ? {
+                ...j,
+                financials: computeFinancials({
+                  ...values,
+                  // editar valores não desfaz um pagamento já registrado
+                  fabricator_paid_at: j.financials?.fabricator_paid_at ?? null,
+                  installer_paid_at: j.financials?.installer_paid_at ?? null,
+                }),
+              }
+            : j,
+        ),
+      ),
+    [],
   );
 
   const value = useMemo<AppState>(
@@ -319,6 +355,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addPhoto,
       createJob,
       setFinancials,
+      myPayout: (job) =>
+        session ? payoutFor(job, session.profile.id) : null,
+      markPaid,
     }),
     [
       lang,
@@ -340,6 +379,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addPhoto,
       createJob,
       setFinancials,
+      markPaid,
     ],
   );
 

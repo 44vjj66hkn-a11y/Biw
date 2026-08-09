@@ -253,6 +253,34 @@ const DICT: Record<string, Entry> = {
       "Cada trabajo cuenta por su fecha de instalación; sin fecha marcada, cuenta por la apertura del proyecto.",
     ],
 
+  // ---------- destaque e recebimentos ----------
+  "Confira antes de produzir": ["Check before producing", "Verifique antes de producir"],
+  "A quantidade e a foto de referência acima são o que foi combinado com o cliente. Qualquer diferença, fale com a gestão antes de cortar material.":
+    [
+      "The quantity and reference photo above are what was agreed with the client. If anything differs, talk to management before cutting material.",
+      "La cantidad y la foto de referencia de arriba son lo acordado con el cliente. Ante cualquier diferencia, hable con la gestión antes de cortar material.",
+    ],
+  "Meus recebimentos": ["My earnings", "Mis cobros"],
+  "A receber nesta semana": ["Due this week", "A cobrar esta semana"],
+  "A receber neste mês": ["Due this month", "A cobrar este mes"],
+  "Já recebido no mês": ["Received this month", "Ya cobrado en el mes"],
+  "A receber no total": ["Due in total", "A cobrar en total"],
+  "Você recebe": ["You get", "Usted recibe"],
+  "Você recebeu": ["You were paid", "Usted recibió"],
+  "A receber": ["Due", "A cobrar"],
+  Pago: ["Paid", "Pagado"],
+  "Marcar como pago": ["Mark as paid", "Marcar como pagado"],
+  "Conta pela data de instalação; sem data marcada, pela abertura do projeto. Some só os trabalhos em que você está escalado.":
+    [
+      "Counted by installation date; with no date set, by when the project was opened. Only jobs you are assigned to.",
+      "Cuenta por la fecha de instalación; sin fecha marcada, por la apertura del proyecto. Solo los trabajos en los que usted está asignado.",
+    ],
+  "Você vê o que recebe por este trabalho. O valor cobrado do cliente, o custo do material e a margem ficam só com a gestão — nem na tela, nem na API.":
+    [
+      "You see what you earn on this job. The amount charged to the client, the material cost and the margin stay with management — not on screen, not in the API.",
+      "Usted ve lo que recibe por este trabajo. El importe cobrado al cliente, el costo del material y el margen quedan solo con la gestión — ni en pantalla ni en la API.",
+    ],
+
   // ---------- demo ----------
   "Modo demonstração — os dados são de exemplo e somem ao recarregar.": [
     "Demo mode — data is sample data and resets on reload.",
